@@ -514,39 +514,26 @@ class plm_component(models.Model):
 
 #   Overridden methods for this entity
 
-    def create(self, cr, uid, vals, context=None):
-        if not vals:
-            return False
-        if ('name' in vals):
-            if not vals['name']:
-                return False
-            existingIDs=self.search(cr, uid, [('name','=',vals['name'])], order = 'engineering_revision', context=context)
-            if 'engineering_code' in vals:
-                if vals['engineering_code'] == False:
-                    vals['engineering_code'] = vals['name']
-            else:
-                vals['engineering_code'] = vals['name']
-    
-            if existingIDs:
-                existingID=existingIDs[len(existingIDs)-1]
-                if ('engineering_revision' in vals):
-                    existObj=self.browse(cr,uid,existingID,context=context)
-                    if existObj:
-                        if vals['engineering_revision'] > existObj.engineering_revision:
-                            vals['name']=existObj.name
-                        else:
-                            return existingID
-                else:
-                    return existingID
-            
-            try:
-                return super(plm_component,self).create(cr, uid, vals, context=context)
-            except Exception ,ex:
-                import psycopg2
-                if isinstance(ex,psycopg2.IntegrityError):
-                    raise ex
-                raise Exception(" (%r). It has tried to create with values : (%r)."%(ex,vals))
-        return False
+    @api.model
+    def create(self, vals):
+        if 'product_tmpl_id' in vals and vals['product_tmpl_id']:
+            prd_tmp_obj = self.env['product.template']
+            prd_template = prd_tmp_obj.browse(vals['product_tmpl_id'])
+            existing_products = self.search([('name', '=', prd_template.name)],
+                                            order='engineering_revision')
+            if not vals.get('engineering_code', False) or \
+                    (vals.get('engineering_code', False) and not
+                     vals['enginerring_code']):
+                vals['engineering_code'] = prd_template.name
+
+            if existing_products:
+                existing_product = existing_products[len(existing_products)-1]
+                if 'engineering_revision' in vals:
+                    if vals['engineering_revision'] > \
+                            existing_product.engineering_revision:
+                        vals['name'] = existing_product.name
+
+        return super(plm_component, self).create(vals)
 
     def write(self, cr, uid, ids, vals, context=None, check=True):
 #        checkState=('confirmed','released','undermodify','obsoleted')

@@ -34,7 +34,7 @@
         <field name="type">tree</field>
         <field name="priority" eval="15"/>
         <field name="arch" type="xml">
-            <tree string="Engineering Parts">
+            <tree string="Engineering Parts" create="false">
                 <field name="name" select="True"/>
                 <field name="engineering_code" select="True"/>
                 <field name="engineering_revision"/>
@@ -85,7 +85,7 @@
         <field name="type">form</field>
         <field name="priority" eval="6"/>
         <field name="arch" type="xml">
-             <form string="Engineering Product">
+             <form string="Engineering Product" create="false">
              
              	<field name="type" invisible="1"/>	
              	<header>
